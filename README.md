@@ -2,12 +2,11 @@ Runner web shell is an interactive web shell that controls an interactive proces
 The control action is using the STDIN. <br>
 The Web Shell getting the STDOUT in real time and shows it on the browser terminal. <br>
 
-<br>
-    Runner is a process that has a job and can be interactive with
-    user commander. User can insert input interactively to the process and
-    also read the output of the process, interactively. <br>
-    For example, Shell can be a runner, it's an infinite process that can
-    getting input and return output while it's running.
+Runner is a process that has a job and can be interactive with
+user commander. User can insert input interactively to the process and
+also read the output of the process, interactively. <br>
+For example, Shell can be a runner, it's an infinite process that can
+getting input and return output while it's running.
 <br>
 <br>
 

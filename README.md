@@ -10,8 +10,3 @@ The Web Shell getting the STDOUT in real time and shows it on the browser..
 
 Running the web shell server:
 $ python server.py
-
-Server Endpoints:
-/runner/start/                  - Starting the runner.
-/runner/stop/                   - Stopping the runner.
-/set_run_command/<run_command>  - Setting the running process.

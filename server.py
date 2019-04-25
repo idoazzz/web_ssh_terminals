@@ -111,8 +111,3 @@ def disconnect():
 
 if __name__ == '__main__':
     socket.run(app, host='127.0.0.1', port=8000, debug=True)
-
-# TODO: Handle multiple tabs
-# TODO: Handle disconnections
-# TODO: Scroll down automatically.
-# TODO: Handle runner names, and initiating the runner.

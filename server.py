@@ -10,6 +10,8 @@ eventlet.monkey_patch()
 app = Flask(__name__)
 socket = SocketIO(app, logger=True, engineio_logger=True)
 
+DEFAULT_RUNNER_PROCESS = "python /home/osboxes/projects/sandbox/example.py"
+
 
 class RunnerBackgroundTask(object):
     """Manage runner runner input and output.
@@ -29,14 +31,13 @@ class RunnerBackgroundTask(object):
         "\\x1b": "\x1B"
     }
 
-    def __init__(self, run_command="python /home/osboxes/projects/sandbox/"
-                                   "example.py"):
+    def __init__(self, runner_name="default_runner"):
         self.emitter_thread = None
-        self.runner = Runner("standalone_runner", run_command)
+        self.runner = Runner(runner_name, DEFAULT_RUNNER_PROCESS)
 
     def restart(self):
         """Restart the runner and the listening thread."""
-        if self.runner:
+        if self.runner.active:
             self.stop()
 
         self.runner.start()
@@ -44,11 +45,10 @@ class RunnerBackgroundTask(object):
 
     def set_new_runner(self, run_command):
         self.runner = Runner("standalone_runner", run_command)
-        self.restart()
 
     def stop(self):
         """Stopping the listening thread and the runner."""
-        if self.runner:
+        if self.runner.active:
             self.emitter_thread.kill()
             self.emitter_thread = None
             self.runner.exit()
@@ -56,7 +56,7 @@ class RunnerBackgroundTask(object):
 
     def listen_for_output(self):
         """Listen for new output and emitting to the client."""
-        while self.runner:
+        while self.runner.active:
             output = self.runner.read_output()
             if output is not None:
                 output = self.filter_output(output)
@@ -91,12 +91,6 @@ def start_runner():
     return jsonify("Shell on")
 
 
-@app.route("/new_runner/<run_command>")
-def new_runner(run_command):
-    """Start a new runner."""
-    runner.set_new_runner(run_command)
-
-
 @app.route("/runner/stop")
 def stop_runner():
     """Stopping the runner."""
@@ -110,8 +104,15 @@ def handle_message(message):
     runner.send_input(message)
 
 
+@socket.on('disconnect')
+def disconnect():
+    runner.stop()
+
+
 if __name__ == '__main__':
     socket.run(app, host='127.0.0.1', port=8000, debug=True)
 
 # TODO: Handle multiple tabs
 # TODO: Handle disconnections
+# TODO: Scroll down automatically.
+# TODO: Handle runner names, and initiating the runner.

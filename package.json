@@ -16,9 +16,6 @@
     "socket.io-client": "latest"
   },
   "dependencies": {
-    "ansi-to-html": "^0.6.10",
-    "ansi-to-react": "^5.0.0",
-    "ansi2html": "0.0.1",
     "ansi_up": "^4.0.3",
     "axios": "^0.18.0",
     "css-loader": "^2.1.1",

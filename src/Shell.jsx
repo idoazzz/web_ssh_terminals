@@ -27,7 +27,6 @@ class Shell extends Component {
               "shell_content": this.state.shell_content  + decoded_html_output
           });
       });
-      this.start_shell()
     }
 
     start_shell() {

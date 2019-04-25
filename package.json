@@ -1,0 +1,34 @@
+{
+  "scripts": {
+    "dev": "webpack --mode development",
+    "start": "webpack --mode development --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.1.2",
+    "@babel/preset-env": "^7.0.0",
+    "@babel/preset-react": "^7.0.0",
+    "babel-loader": "^8.0.4",
+    "webpack": "^4.20.2",
+    "webpack-cli": "^3.1.2",
+    "socket.io-client": "latest"
+  },
+  "dependencies": {
+    "ansi-to-html": "^0.6.10",
+    "ansi-to-react": "^5.0.0",
+    "ansi2html": "0.0.1",
+    "ansi_up": "^4.0.3",
+    "axios": "^0.18.0",
+    "css-loader": "^2.1.1",
+    "html-entities": "^1.2.1",
+    "npm": "^6.9.0",
+    "react": "^16.5.2",
+    "react-dom": "^16.5.2",
+    "socket.io-client": "latest",
+    "socketio": "^1.0.0",
+    "strip-ansi": "^5.2.0",
+    "style-loader": "^0.23.1"
+  }
+}

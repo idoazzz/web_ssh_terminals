@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import Shell from './Shell.jsx'
+import Terminal from './Terminal.jsx'
 
 class App extends React.Component {
 
@@ -16,7 +16,7 @@ class App extends React.Component {
     render() {
         return (
             <div>
-               <Shell end_point={ this.state.end_point }></Shell>
+               <Terminal end_point={ this.state.end_point }></Terminal>
             </div>
         );
     }

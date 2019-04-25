@@ -1,4 +1,4 @@
-import './Shell.css'
+import './Terminal.css'
 import axios from "axios";
 import React, { Component } from 'react'
 import { XmlEntities } from 'html-entities';
@@ -6,7 +6,7 @@ import { default as AnsiUp } from 'ansi_up';
 import CommandForm from "./CommandForm.jsx";
 import socketIOClient from 'socket.io-client';
 
-class Shell extends Component {
+class Terminal extends Component {
 
     constructor(props) {
         super(props);
@@ -14,7 +14,7 @@ class Shell extends Component {
         this.ansi_converter = new AnsiUp();;
         this.state = {
             "socket": socketIOClient(props.end_point),
-            "shell_content": ""
+            "terminal_content": ""
         };
     }
 
@@ -24,39 +24,39 @@ class Shell extends Component {
           let decoded_html_output = this.entities.decode(output_html);
           this.setState({
               ...this.state,
-              "shell_content": this.state.shell_content  + decoded_html_output
+              "terminal_content": this.state.terminal_content  + decoded_html_output
           });
       });
     }
 
-    start_shell() {
+    start_terminal() {
         axios.get(`/runner/start`)
           .then(res => {});
     }
 
-    stop_shell() {
+    stop_terminal() {
         axios.get(`/runner/stop`)
           .then(res => {});
     }
 
-    clear_shell(){
+    clear_terminal(){
         this.setState({
             ...this.state,
-            "shell_content": ""
+            "terminal_content": ""
         });
     }
 
     render() {
         return (
-            <div className="shell">
+            <div className="terminal">
                 <div>
-                    <a href='#' onClick={ this.start_shell }>Start Shell</a> |
-                    <a href='#' onClick={ this.stop_shell }>Stop Shell</a> |
-                    <a href='#' onClick={ this.clear_shell.bind(this) }>Clear</a>
+                    <a href='#' onClick={ this.start_terminal }>Start Terminal</a> |
+                    <a href='#' onClick={ this.stop_terminal }>Stop Terminal</a> |
+                    <a href='#' onClick={ this.clear_terminal.bind(this) }>Clear</a>
                 </div>
                 <div
-                    className="shell_body"
-                    dangerouslySetInnerHTML={{__html: this.state.shell_content}}>
+                    className="terminal_body"
+                    dangerouslySetInnerHTML={{__html: this.state.terminal_content}}>
                 </div>
                 <CommandForm socket={this.state.socket}/>
             </div>
@@ -64,4 +64,4 @@ class Shell extends Component {
     }
 }
 
-export default Shell
+export default Terminal

@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import './Shell.css'
+import './Terminal.css'
 
 class CommandForm extends Component {
   constructor(props) {

@@ -11,7 +11,7 @@ class Runner(object):
     Runner is a process that has a job and can be interactive with
     user commander. User can insert input interactively to the process and
     also read the output of the process, interactively.
-    For example, Shell can be a runner, it's an infinite process that can
+    For example, Terminal can be a runner, it's an infinite process that can
     getting input and return output while it's running.
 
     Attributes:
@@ -33,27 +33,27 @@ class Runner(object):
         self.logger.setLevel(DEBUG)
 
     def start(self):
-        """Spawning the shell sub process."""
+        """Spawning the runner sub process."""
         self.logger.debug("Spawning %s...", self.runner_program)
         self.sub_process = spawn(self.runner_program)
         self.active = True
 
     def send_input(self, data):
-        """Send single command input to the shell.
+        """Send single command input to the runner.
 
         Args:
-            data (str): Shell command.
+            data (str): Terminal command.
         """
         self.logger.debug("Sending %s", data)
         self.sub_process.sendline(data)
 
     def send_inputs(self, *args):
-        """Send several inputs to the shell input."""
+        """Send several inputs to the runner input."""
         for arg in args:
             self.send_input(arg)
 
     def read_output(self, size=CHUNK_SIZE):
-        """Read an output from the shell.
+        """Read an output from the runner.
 
         We read each time up to CHUNK_SIZE bytes with a timeout of TIMEOUT.
         We always stop to read after TIMEOUT and return the result.
@@ -76,14 +76,14 @@ class Runner(object):
         return result if result is not "" else None
 
     def exit(self):
-        """Terminate the shell."""
-        self.logger.debug("Exiting %s shell", self.runner_name)
+        """Terminate the runner."""
+        self.logger.debug("Exiting %s runner", self.runner_name)
         self.sub_process.terminate()
         self.active = False
 
 
 class RemoteRunner(Runner):
-    """Runner that holds a remote shell for interactive use."""
+    """Runner that holds a remote runner for interactive use."""
 
     def __init__(self, runner_name, runner_program, hostname, username,
                  password):
@@ -94,7 +94,7 @@ class RemoteRunner(Runner):
         self.password = password
 
     def start(self):
-        """Spawning the remote shell sub process."""
+        """Spawning the remote runner sub process."""
         self.logger.debug("Spawning remote runner...")
         try:
 

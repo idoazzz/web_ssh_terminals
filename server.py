@@ -88,14 +88,14 @@ def index():
 def start_runner():
     """Starting/Restarting the runner."""
     runner.restart()
-    return jsonify("Shell on")
+    return jsonify("Terminal on")
 
 
 @app.route("/runner/stop")
 def stop_runner():
     """Stopping the runner."""
     runner.stop()
-    return jsonify("Shell off")
+    return jsonify("Terminal off")
 
 
 @socket.on('new_input')

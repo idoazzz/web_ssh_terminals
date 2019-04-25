@@ -8,7 +8,6 @@ also read the output of the process, interactively. <br>
 For example, Shell can be a runner, it's an infinite process that can
 getting input and return output while it's running.
 <br>
-<br>
 
 * Runner web shell can be used as a Web Shell (The runner that will be runned is /bin/bash).
 * Runner web shell offers you a way of running an interactive flow\tests on tests server and see\debug the result.

@@ -1,13 +1,10 @@
-import eventlet
-
 from flask import Flask, jsonify, render_template
 from flask_socketio import SocketIO
 
 from runners import Runner
 
-eventlet.monkey_patch()
-
 app = Flask(__name__)
+
 socket = SocketIO(app, logger=True, engineio_logger=True)
 
 DEFAULT_RUNNER_PROCESS = "python /home/osboxes/projects/sandbox/example.py"
@@ -41,10 +38,8 @@ class RunnerBackgroundTask(object):
             self.stop()
 
         self.runner.start()
-        self.emitter_thread = eventlet.spawn(self.listen_for_output)
-
-    def set_new_runner(self, run_command):
-        self.runner = Runner("standalone_runner", run_command)
+        self.emitter_thread = socket.start_background_task(self.
+                                                           listen_for_output)
 
     def stop(self):
         """Stopping the listening thread and the runner."""
@@ -52,7 +47,6 @@ class RunnerBackgroundTask(object):
             self.emitter_thread.kill()
             self.emitter_thread = None
             self.runner.exit()
-            self.runner = None
 
     def listen_for_output(self):
         """Listen for new output and emitting to the client."""
@@ -60,9 +54,10 @@ class RunnerBackgroundTask(object):
             output = self.runner.read_output()
             if output is not None:
                 output = self.filter_output(output)
-                socket.emit('new_output', output)
+                with app.app_context():
+                    socket.emit('new_output', output)
             else:
-                eventlet.sleep(1)
+                socket.sleep(0)
 
     def send_input(self, *inputs):
         """Sending input to the runner."""
@@ -106,7 +101,8 @@ def handle_message(message):
 
 @socket.on('disconnect')
 def disconnect():
-    runner.stop()
+    # runner.stop()
+    pass
 
 
 if __name__ == '__main__':

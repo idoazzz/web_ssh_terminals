@@ -11,7 +11,7 @@ class Runner(object):
     Runner is a process that has a job and can be interactive with
     user commander. User can insert input interactively to the process and
     also read the output of the process, interactively.
-    For example, Terminal can be a runner, it's an infinite process that can
+    For example, Shell can be a runner, it's an infinite process that can
     getting input and return output while it's running.
 
     Attributes:

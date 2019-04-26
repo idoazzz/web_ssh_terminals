@@ -106,3 +106,66 @@ class RemoteRunner(Runner):
         except pxssh.ExceptionPxssh as e:
             print("Failed on login.")
             print(e)
+
+
+class RunnersManager(object):
+    """Runners manager that holds all the interactive shells."""
+
+    def __init__(self):
+        self._runners = {}
+
+    def load_runner(self, runner_name, runner_program, hostname=None,
+                    username=None, password=None):
+        """Load and start a specific shell runner."""
+
+        # Local shell
+        if hostname is None:
+            self[runner_name] = Runner(runner_name, runner_program)
+
+        # Remote shell
+        else:
+            self[runner_name] = RemoteRunner(runner_name, runner_program,
+                                             hostname, username, password)
+
+        return self[runner_name]
+
+    def exists(self, runner_name):
+        """Check if the runner exists."""
+        return runner_name in self._runners.keys()
+
+    def start(self, runner_name):
+        """Start a specific runner."""
+        self[runner_name].start()
+
+    def is_active(self, runner_name):
+        """Check if specific runner is active."""
+        return self[runner_name].active
+
+    def terminate_runner(self, runner_name):
+        """Terminate a specific runner."""
+        self[runner_name].exit()
+        del self[runner_name]
+
+    def broadcast(self, *args):
+        """Send commands to all the active runners.
+
+        Args:
+            args (list): Commands for execute.
+        """
+        for _runner in self:
+            _runner.send_inputs(*args)
+
+    def __getitem__(self, item):
+        return self._runners[item]
+
+    def __setitem__(self, key, value):
+        self._runners[key] = value
+
+    def __delitem__(self, key):
+        del self._runners[key]
+
+    def __iter__(self):
+        return iter(self._runners.values())
+
+    def __str__(self):
+        return str(self._runners)

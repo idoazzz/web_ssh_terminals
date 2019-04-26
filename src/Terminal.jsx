@@ -30,13 +30,11 @@ class Terminal extends Component {
     }
 
     start_terminal() {
-        axios.get(`/runner/start`)
-          .then(res => {});
+        this.state.socket.emit('start_runner');
     }
 
     stop_terminal() {
-        axios.get(`/runner/stop`)
-          .then(res => {});
+        this.state.socket.emit('stop_runner');
     }
 
     clear_terminal(){
@@ -50,8 +48,8 @@ class Terminal extends Component {
         return (
             <div className="terminal">
                 <div>
-                    <a href='#' onClick={ this.start_terminal }>Start Terminal</a> |
-                    <a href='#' onClick={ this.stop_terminal }>Stop Terminal</a> |
+                    <a href='#' onClick={ this.start_terminal.bind(this) }>Start Terminal</a> |
+                    <a href='#' onClick={ this.stop_terminal.bind(this) }>Stop Terminal</a> |
                     <a href='#' onClick={ this.clear_terminal.bind(this) }>Clear</a>
                 </div>
                 <div

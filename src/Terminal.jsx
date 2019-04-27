@@ -15,14 +15,14 @@ class Terminal extends Component {
         this.ansi_converter = new AnsiUp();;
         this.state = {
             "socket": socketIOClient(props.end_point),
-            "terminal_content": ""
+            "terminal_content": "",
+            "active": false
         };
         this.state.socket.emit('join_terminal', this.id);
     }
 
     componentDidMount(){
       this.state.socket.on('new_output', (output) => {
-          console.log(output)
           let output_html = this.ansi_converter.ansi_to_html(output);
           let decoded_html_output = this.entities.decode(output_html);
           this.setState({
@@ -31,13 +31,29 @@ class Terminal extends Component {
           });
       });
 
-      this.state.socket.on('terminal_history', (output) => {
-          console.log(output)
+      axios.get('/runner/'+ this.id +'/active')
+      .then(active => {
+           this.setState({
+              ...this.state,
+              "active": active.data
+          });
+
+      })
+
+        this.state.socket.on('terminal_history', (output) => {
           let output_html = this.ansi_converter.ansi_to_html(output);
           let decoded_html_output = this.entities.decode(output_html);
           this.setState({
               ...this.state,
               "terminal_content": decoded_html_output
+          });
+      });
+
+
+      this.state.socket.on('is_active', (active) => {
+          this.setState({
+              ...this.state,
+              "active": active
           });
       });
     }
@@ -61,9 +77,17 @@ class Terminal extends Component {
         });
     }
 
+    active_badge(){
+        if(this.state.active)
+            return <div>Active</div>
+        else
+            return <div>Not Active</div>
+    }
+
     render() {
         return (
             <div className="terminal">
+                { this.active_badge.bind(this)() }
                 <div>
                     <a onClick={ this.start_terminal.bind(this) }>Start Terminal</a> |
                     <a onClick={ this.stop_terminal.bind(this) }>Stop Terminal</a> |

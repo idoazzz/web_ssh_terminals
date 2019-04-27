@@ -24,7 +24,6 @@ class Runner(object):
     CHUNK_SIZE = 4096  # Bytes.
 
     def __init__(self, runner_name, runner_program, save_output=True):
-        self.active = False
         self.sub_process = None
         self.runner_name = runner_name
         self.runner_program = runner_program
@@ -40,7 +39,6 @@ class Runner(object):
         """Spawning the runner sub process."""
         self.logger.debug("Spawning %s...", self.runner_program)
         self.sub_process = spawn(self.runner_program)
-        self.active = True
 
     def send_input(self, data):
         """Send single command input to the runner.
@@ -86,7 +84,6 @@ class Runner(object):
         """Terminate the runner."""
         self.logger.debug("Exiting %s runner", self.runner_name)
         self.sub_process.terminate()
-        self.active = False
 
     def __str__(self):
         return f"Runner: {self.runner_name} Is Active: {self.active}. Runs " \
@@ -128,6 +125,8 @@ class RunnersManager(object):
     def load_runner(self, runner_name, runner_program, hostname=None,
                     username=None, password=None):
         """Load and start a specific shell runner."""
+        if self.exists(runner_name):
+            return None
 
         # Local shell
         if hostname is None:
@@ -142,6 +141,7 @@ class RunnersManager(object):
 
     @property
     def runners(self):
+        """Return json dump with runners state."""
         runners = {key: str(value) for key, value in self._runners.items()}
         return json.dumps(runners)
 
@@ -151,19 +151,14 @@ class RunnersManager(object):
 
     def start(self, runner_name):
         """Start a specific runner."""
-        self[runner_name].start()
-
-    def is_active(self, runner_name):
-        """Check if specific runner is active."""
         if self.exists(runner_name):
-            return self[runner_name].active
-        else:
-            return False
+            self[runner_name].start()
 
     def terminate_runner(self, runner_name):
         """Terminate a specific runner."""
-        self[runner_name].exit()
-        del self[runner_name]
+        if self.exists(runner_name):
+            self[runner_name].exit()
+            del self[runner_name]
 
     def broadcast(self, *args):
         """Send commands to all the active runners.

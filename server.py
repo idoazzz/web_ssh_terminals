@@ -1,5 +1,7 @@
 import os
 
+import yaml
+from attrdict import AttrDict
 from flask import Flask, jsonify, render_template, request, session
 from flask_socketio import SocketIO, join_room, leave_room
 
@@ -13,7 +15,7 @@ socket = SocketIO(app,
                   logger=True,
                   engineio_logger=True)
 
-DEFAULT_RUNNER_PROCESS = "python /home/osboxes/projects/sandbox/example.py"
+RUNNERS_CONFIG = "runners_config.yml"
 
 
 class RunnerManagerBackgroundTask(RunnersManager):
@@ -38,21 +40,34 @@ class RunnerManagerBackgroundTask(RunnersManager):
         super(RunnerManagerBackgroundTask, self).__init__()
         self.emitter_threads = {}
 
+        with open(RUNNERS_CONFIG) as runners_config:
+            config = runners_config.read()
+            self.config = AttrDict(yaml.load(config))
+
+    @property
+    def active_runners(self):
+        """Return the active runners."""
+        return [runner for runner in self if self.is_exist(runner)]
+
     def restart(self, terminal_id):
         """Restart the runner and the listening thread.
 
         Args:
             terminal_id (str): Socket and runner identifier.
         """
-        if not self.exists(terminal_id):
-            self.load_runner(terminal_id, DEFAULT_RUNNER_PROCESS)
+        if int(terminal_id) < 0 or \
+                int(terminal_id) > self.config.runners_amount:
+            raise IndexError("Terminal id is out of index.")
 
-        if self.is_active(terminal_id):
+        if not self.exists(terminal_id):
+            self.load_runner(terminal_id, self.config.run_command)
+        else:
             self.stop(terminal_id)
 
         self.start(terminal_id)
         self.emitter_threads[terminal_id] = socket. \
             start_background_task(self.listen_for_output, terminal_id)
+        socket.emit("is_active", True, room=terminal_id)
 
     def stop(self, terminal_id):
         """Stopping the listening thread and the runner.
@@ -60,10 +75,10 @@ class RunnerManagerBackgroundTask(RunnersManager):
         Args:
             terminal_id (str): Socket and runner identifier.
         """
-        if self.is_active(terminal_id):
+        if self.exists(terminal_id):
+            socket.emit("is_active", False, room=terminal_id)
             self.terminate_runner(terminal_id)  # Will end the thread
             self.emitter_threads[terminal_id] = None
-            self.runners_contents[terminal_id] = None
 
     def listen_for_output(self, terminal_id):
         """Listen for new output and emitting to the client.
@@ -71,7 +86,7 @@ class RunnerManagerBackgroundTask(RunnersManager):
         Args:
             terminal_id (str): Socket and runner identifier.
         """
-        while self.is_active(terminal_id):
+        while self.exists(terminal_id):
             output = self[terminal_id].read_output()
             if output is not None:
                 output = self.filter_output(output)
@@ -91,7 +106,7 @@ class RunnerManagerBackgroundTask(RunnersManager):
 
         self[terminal_id].send_inputs(command)
 
-    def send_runner_content(self, terminal_id):
+    def send_runner_history(self, terminal_id):
         """Send the history of the runner to a specific room."""
 
         if not self.exists(terminal_id):
@@ -121,10 +136,10 @@ def index():
     return render_template('index.html')
 
 
-@app.route("/terminals")
-def terminals():
+@app.route("/runner/<runner_id>/active")
+def is_active(runner_id):
     """Serving the index page."""
-    return render_template('terminals.html')
+    return jsonify(runner_manager.exists(runner_id))
 
 
 @app.route("/runners")
@@ -149,7 +164,7 @@ def stop_runner(terminal_id):
 def join_terminal(terminal_id):
     """Joining the terminal room."""
     join_room(terminal_id)
-    runner_manager.send_runner_content(terminal_id)
+    runner_manager.send_runner_history(terminal_id)
 
 
 @socket.on("leave_terminal")

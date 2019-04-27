@@ -24,7 +24,6 @@ class CommandForm extends Component {
   }
 
   send(command){
-      console.log(this.id)
       this.state.socket.emit('new_input', {"command": command , "terminal_id": this.id});
   }
 

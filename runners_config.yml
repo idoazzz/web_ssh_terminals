@@ -1,3 +1,2 @@
-git_repository: ""
 runners_amount: 10
-runners_directory: "/home/osboxes/projects/sandbox/runners"
+run_command: "python /home/osboxes/projects/sandbox/example.py"

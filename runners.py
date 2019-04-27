@@ -23,7 +23,7 @@ class Runner(object):
     TIMEOUT = 0.001  # Seconds, reading interval.
     CHUNK_SIZE = 4096  # Bytes.
 
-    def __init__(self, runner_name, runner_program):
+    def __init__(self, runner_name, runner_program, save_output=True):
         self.active = False
         self.sub_process = None
         self.runner_name = runner_name
@@ -32,6 +32,9 @@ class Runner(object):
         logging.basicConfig()
         self.logger = getLogger(runner_name)
         self.logger.setLevel(DEBUG)
+
+        self.save_output = save_output
+        self.output = ""
 
     def start(self):
         """Spawning the runner sub process."""
@@ -73,6 +76,9 @@ class Runner(object):
 
         except EOF:
             pass
+
+        if result is not "" and self.save_output:
+            self.output += result
 
         return result if result is not "" else None
 

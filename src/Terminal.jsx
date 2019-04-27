@@ -43,7 +43,6 @@ class Terminal extends Component {
     }
 
     componentWillUnmount() {
-        console.log("Disconnecting...")
         this.state.socket.emit('leave_terminal', this.id);
     }
 
@@ -66,7 +65,6 @@ class Terminal extends Component {
         return (
             <div className="terminal">
                 <div>
-                    <a onClick={ this.get_content.bind(this) }>Get Terminal Content</a> |
                     <a onClick={ this.start_terminal.bind(this) }>Start Terminal</a> |
                     <a onClick={ this.stop_terminal.bind(this) }>Stop Terminal</a> |
                     <a onClick={ this.clear_terminal.bind(this) }>Clear</a>

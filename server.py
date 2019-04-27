@@ -8,7 +8,10 @@ from runners import RunnersManager
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
-socket = SocketIO(app, logger=True, engineio_logger=True)
+socket = SocketIO(app,
+                  static_url_path='/static',
+                  logger=True,
+                  engineio_logger=True)
 
 DEFAULT_RUNNER_PROCESS = "python /home/osboxes/projects/sandbox/example.py"
 
@@ -34,7 +37,6 @@ class RunnerManagerBackgroundTask(RunnersManager):
     def __init__(self):
         super(RunnerManagerBackgroundTask, self).__init__()
         self.emitter_threads = {}
-        self.runners_contents = {}
 
     def restart(self, terminal_id):
         """Restart the runner and the listening thread.
@@ -51,7 +53,6 @@ class RunnerManagerBackgroundTask(RunnersManager):
         self.start(terminal_id)
         self.emitter_threads[terminal_id] = socket. \
             start_background_task(self.listen_for_output, terminal_id)
-        self.runners_contents[terminal_id] = ""
 
     def stop(self, terminal_id):
         """Stopping the listening thread and the runner.
@@ -74,22 +75,31 @@ class RunnerManagerBackgroundTask(RunnersManager):
             output = self[terminal_id].read_output()
             if output is not None:
                 output = self.filter_output(output)
-                self.runners_contents[terminal_id] += output
                 socket.emit('new_output', output, room=terminal_id)
             else:
                 socket.sleep(0)
 
-    def send_input(self, terminal_id, input):
+    def send_input(self, terminal_id, command):
         """Sending input to the runner.
 
         Args:
             terminal_id (str): Socket and runner identifier.
+            command (str): Input for the runner.
         """
-        self[terminal_id].send_inputs(input)
+        if not self.exists(terminal_id):
+            return
+
+        self[terminal_id].send_inputs(command)
 
     def send_runner_content(self, terminal_id):
-        terminal_content = self.runners_contents[terminal_id]
-        socket.emit('terminal_history', terminal_content, room=terminal_id)
+        """Send the history of the runner to a specific room."""
+
+        if not self.exists(terminal_id):
+            return
+
+        terminal_content = self[terminal_id].output
+        socket.emit('terminal_history', self.filter_output(terminal_content),
+                    room=terminal_id)
 
     def filter_output(self, output):
         """Filtering the runner output and adjust the output to the client.
@@ -109,6 +119,12 @@ runner_manager = RunnerManagerBackgroundTask()
 def index():
     """Serving the index page."""
     return render_template('index.html')
+
+
+@app.route("/terminals")
+def terminals():
+    """Serving the index page."""
+    return render_template('terminals.html')
 
 
 @app.route("/runners")

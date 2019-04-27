@@ -1,0 +1,3 @@
+git_repository: ""
+runners_amount: 10
+runners_directory: "/home/osboxes/projects/sandbox/runners"

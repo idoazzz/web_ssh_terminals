@@ -55,10 +55,6 @@ class Terminal extends Component {
         this.state.socket.emit('stop_runner', this.id);
     }
 
-    get_content() {
-        this.state.socket.emit('get_terminal_content', this.id);
-    }
-
     clear_terminal(){
         this.setState({
             ...this.state,

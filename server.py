@@ -142,12 +142,6 @@ def leave_terminal(terminal_id):
     leave_room(terminal_id)
 
 
-@socket.on("get_terminal_content")
-def get_terminal_content(terminal_id):
-    """Leaving the terminal room."""
-    runner_manager.send_runner_content(terminal_id)
-
-
 @socket.on('new_input')
 def handle_message(data):
     """Sending new input to the runner."""

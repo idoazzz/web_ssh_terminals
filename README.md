@@ -20,4 +20,3 @@ More optional uses:  <br>
 * Runner web shell can be used as a Web Shell (The runner that will be runned is /bin/bash).
 * Runner web shell can run the target process in a remote computer (The server connects to the remote computer).
 <br>
-IMPORTANT: The server enviroment should contains also the runners enviroment.

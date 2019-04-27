@@ -4,6 +4,8 @@ import './Terminal.css'
 class CommandForm extends Component {
   constructor(props) {
     super(props);
+    this.id = props.id;
+    console.log(this.id)
     this.state = {
         "socket": props.socket,
         "value": ""
@@ -22,7 +24,8 @@ class CommandForm extends Component {
   }
 
   send(command){
-      this.state.socket.emit('new_input', command);
+      console.log(this.id)
+      this.state.socket.emit('new_input', {"command": command , "terminal_id": this.id});
   }
 
   render() {

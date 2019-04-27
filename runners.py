@@ -1,3 +1,4 @@
+import json
 import logging
 from logging import getLogger, DEBUG
 
@@ -81,6 +82,10 @@ class Runner(object):
         self.sub_process.terminate()
         self.active = False
 
+    def __str__(self):
+        return f"Runner: {self.runner_name} Is Active: {self.active}. Runs " \
+            f"Program: {self.runner_program} "
+
 
 class RemoteRunner(Runner):
     """Runner that holds a remote runner for interactive use."""
@@ -129,6 +134,11 @@ class RunnersManager(object):
 
         return self[runner_name]
 
+    @property
+    def runners(self):
+        runners = {key: str(value) for key, value in self._runners.items()}
+        return json.dumps(runners)
+
     def exists(self, runner_name):
         """Check if the runner exists."""
         return runner_name in self._runners.keys()
@@ -139,7 +149,10 @@ class RunnersManager(object):
 
     def is_active(self, runner_name):
         """Check if specific runner is active."""
-        return self[runner_name].active
+        if self.exists(runner_name):
+            return self[runner_name].active
+        else:
+            return False
 
     def terminate_runner(self, runner_name):
         """Terminate a specific runner."""

@@ -10,16 +10,19 @@ class Terminal extends Component {
 
     constructor(props) {
         super(props);
-        this.entities = new XmlEntities()
+        this.id = props.id;
+        this.entities = new XmlEntities();
         this.ansi_converter = new AnsiUp();;
         this.state = {
             "socket": socketIOClient(props.end_point),
             "terminal_content": ""
         };
+        this.state.socket.emit('join_terminal', this.id);
     }
 
     componentDidMount(){
       this.state.socket.on('new_output', (output) => {
+          console.log(output)
           let output_html = this.ansi_converter.ansi_to_html(output);
           let decoded_html_output = this.entities.decode(output_html);
           this.setState({
@@ -27,14 +30,33 @@ class Terminal extends Component {
               "terminal_content": this.state.terminal_content  + decoded_html_output
           });
       });
+
+      this.state.socket.on('terminal_history', (output) => {
+          console.log(output)
+          let output_html = this.ansi_converter.ansi_to_html(output);
+          let decoded_html_output = this.entities.decode(output_html);
+          this.setState({
+              ...this.state,
+              "terminal_content": decoded_html_output
+          });
+      });
+    }
+
+    componentWillUnmount() {
+        console.log("Disconnecting...")
+        this.state.socket.emit('leave_terminal', this.id);
     }
 
     start_terminal() {
-        this.state.socket.emit('start_runner');
+        this.state.socket.emit('start_runner', this.id);
     }
 
     stop_terminal() {
-        this.state.socket.emit('stop_runner');
+        this.state.socket.emit('stop_runner', this.id);
+    }
+
+    get_content() {
+        this.state.socket.emit('get_terminal_content', this.id);
     }
 
     clear_terminal(){
@@ -48,15 +70,16 @@ class Terminal extends Component {
         return (
             <div className="terminal">
                 <div>
-                    <a href='#' onClick={ this.start_terminal.bind(this) }>Start Terminal</a> |
-                    <a href='#' onClick={ this.stop_terminal.bind(this) }>Stop Terminal</a> |
-                    <a href='#' onClick={ this.clear_terminal.bind(this) }>Clear</a>
+                    <a onClick={ this.get_content.bind(this) }>Get Terminal Content</a> |
+                    <a onClick={ this.start_terminal.bind(this) }>Start Terminal</a> |
+                    <a onClick={ this.stop_terminal.bind(this) }>Stop Terminal</a> |
+                    <a onClick={ this.clear_terminal.bind(this) }>Clear</a>
                 </div>
                 <div
                     className="terminal_body"
                     dangerouslySetInnerHTML={{__html: this.state.terminal_content}}>
                 </div>
-                <CommandForm socket={this.state.socket}/>
+                <CommandForm id={this.id} socket={this.state.socket}/>
             </div>
         );
     }

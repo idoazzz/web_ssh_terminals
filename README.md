@@ -19,6 +19,4 @@ More optional uses:  <br>
 * Runner web shell offers you a way of sharing program running state. 
 * Runner web shell can be used as a Web Shell (The runner that will be runned is /bin/bash).
 * Runner web shell can run the target process in a remote computer (The server connects to the remote computer).
-
 <br>
-IMPORTANT: The server will run on the enviroment of the target program.

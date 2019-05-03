@@ -9,21 +9,22 @@ class CommandForm extends Component {
         "socket": props.socket,
         "value": ""
     };
-    this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  handleChange(event) {
+  handleChange = (event) => {
     this.setState({...this.state,value: event.target.value});
-  }
+  };
 
-  handleSubmit(event) {
+  handleSubmit = (event) => {
     this.send(this.state.value)
     event.preventDefault();
-  }
+  };
 
   send(command){
-      this.state.socket.emit('new_input', {"command": command , "terminal_id": this.id});
+      this.state.socket.emit('new_input',
+          {"command": command ,
+            "terminal_id": this.id
+          });
       this.state.value = ""
   }
 

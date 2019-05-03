@@ -13,7 +13,8 @@ app.secret_key = os.urandom(24)
 socket = SocketIO(app,
                   static_url_path='/static',
                   logger=True,
-                  engineio_logger=True)
+                  engineio_logger=True,
+                  async_mode="eventlet")
 
 RUNNERS_CONFIG = "runners_config.yml"
 
@@ -28,17 +29,18 @@ class RunnerManagerBackgroundTask(RunnersManager):
     passes here also.
 
     Attributes:
-        emitter_threads (dict): Contains threads that listening for new output.
+        runners_listeners (dict): Contains threads that listening for new
+        output.
     """
     FILTER_RULES = {
-        "\\r": "",
-        "\\n": "<br>",
-        "\\x1b": "\x1B"
+        "\\x1b": "\x1B",
+        "\n": "<br>",
+        "]0;": ""
     }
 
     def __init__(self):
         super(RunnerManagerBackgroundTask, self).__init__()
-        self.emitter_threads = {}
+        self.runners_listeners = {}
 
         with open(RUNNERS_CONFIG) as runners_config:
             config = runners_config.read()
@@ -47,26 +49,33 @@ class RunnerManagerBackgroundTask(RunnersManager):
     @property
     def active_runners(self):
         """Return the active runners."""
-        return [runner for runner in self if self.is_exist(runner)]
+        return self._runners
 
-    def restart(self, terminal_id):
+    def restart(self, terminal_id, host, username, password):
         """Restart the runner and the listening thread.
 
         Args:
             terminal_id (str): Socket and runner identifier.
+            host (str): Remote host.
+            username (str): Target username.
+            password (str): Target password.
         """
-        if int(terminal_id) < 0 or \
-                int(terminal_id) > self.config.runners_amount:
-            raise IndexError("Terminal id is out of index.")
+        if len(self.active_runners) >= self.config.runners_limit:
+            raise IndexError("Cannot add new runner.")
 
         if not self.exists(terminal_id):
-            self.load_runner(terminal_id, self.config.run_command)
+            self.load_runner(terminal_id, self.config.setup_command,
+                             host, username, password)
         else:
             self.stop(terminal_id)
 
         self.start(terminal_id)
-        self.emitter_threads[terminal_id] = socket. \
+        self.runners_listeners[terminal_id] = socket. \
             start_background_task(self.listen_for_output, terminal_id)
+
+        for command in self.config.startup_commands:
+            self.send_input(terminal_id, command)
+
         socket.emit("is_active", True, room=terminal_id)
 
     def stop(self, terminal_id):
@@ -78,7 +87,7 @@ class RunnerManagerBackgroundTask(RunnersManager):
         if self.exists(terminal_id):
             socket.emit("is_active", False, room=terminal_id)
             self.terminate_runner(terminal_id)  # Will end the thread
-            self.emitter_threads[terminal_id] = None
+            self.runners_listeners[terminal_id] = None
 
     def listen_for_output(self, terminal_id):
         """Listen for new output and emitting to the client.
@@ -149,9 +158,9 @@ def get_runners():
 
 
 @socket.on("start_runner")
-def start_runner(terminal_id):
+def start_runner(terminal_id, host, username, password):
     """Starting/Restarting the runner."""
-    runner_manager.restart(terminal_id)
+    runner_manager.restart(terminal_id, host, username, password)
 
 
 @socket.on("stop_runner")

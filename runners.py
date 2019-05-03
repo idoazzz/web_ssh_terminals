@@ -63,17 +63,19 @@ class Runner(object):
         Args:
             size (int): The size of reading buffer.
         """
-        result = ""
+        result = b""
         try:
             while True:
                 current = self.sub_process.read_nonblocking(size, self.TIMEOUT)
-                result += str(current)[2:-1]
+                result += current
 
         except READING_TIMEOUT_EXCEPTION:
             pass
 
         except EOF:
             pass
+
+        result = result.decode("unicode_escape")
 
         if result is not "" and self.save_output:
             self.output += result
@@ -112,11 +114,16 @@ class RemoteRunner(Runner):
             super(RemoteRunner, self).start()
 
         except pxssh.ExceptionPxssh as e:
-            print("Failed on login.")
-            print(e)
+            self.logger.critical("Failed on login.")
+            self.logger.exception(e)
+
+    def stop(self):
+        """Stopping the running remote runner."""
+        self.sub_process.logout()
+        super(RemoteRunner, self).exit()
 
 
-class RunnersManager(object):
+class RunnersManager:
     """Runners manager that holds all the interactive shells."""
 
     def __init__(self):
@@ -125,17 +132,8 @@ class RunnersManager(object):
     def load_runner(self, runner_name, runner_program, hostname=None,
                     username=None, password=None):
         """Load and start a specific shell runner."""
-        if self.exists(runner_name):
-            return None
-
-        # Local shell
-        if hostname is None:
-            self[runner_name] = Runner(runner_name, runner_program)
-
-        # Remote shell
-        else:
-            self[runner_name] = RemoteRunner(runner_name, runner_program,
-                                             hostname, username, password)
+        self[runner_name] = RemoteRunner(runner_name, runner_program,
+                                         hostname, username, password)
 
         return self[runner_name]
 

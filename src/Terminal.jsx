@@ -63,7 +63,8 @@ class Terminal extends Component {
     }
 
     start_terminal() {
-        this.state.socket.emit('start_runner', this.id);
+        this.state.socket.emit('start_runner', this.id, "10.0.2.15","osboxes",
+                                "osboxes.org");
     }
 
     stop_terminal() {

@@ -1,2 +1,5 @@
-runners_amount: 10
-run_command: "python /home/osboxes/projects/sandbox/example.py"
+runners_limit: 10
+setup_command: /bin/bash
+startup_commands:
+  - echo "Welcome!"
+  - ls /

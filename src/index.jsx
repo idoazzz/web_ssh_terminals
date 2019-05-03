@@ -17,14 +17,14 @@ class App extends React.Component {
         };
     }
 
-    start_terminal() {
+    start_terminal = () => {
         this.state.socket.emit('start_runner', this.state.terminal_id, "10.0.2.15", "osboxes",
             "osboxes.org");
-    }
+    };
 
-    stop_terminal() {
+    stop_terminal = () => {
         this.state.socket.emit('stop_runner', this.state.terminal_id);
-    }
+    };
 
     render() {
         return (
@@ -36,10 +36,8 @@ class App extends React.Component {
                </Terminal>
                 <div className="control_panel">
                     <div>
-                        <a onClick={this.start_terminal.bind(this)}>Start
-                            Terminal</a> |
-                        <a onClick={this.stop_terminal.bind(this)}>Stop
-                            Terminal</a> |
+                        <a onClick={this.start_terminal}>Start Terminal</a> |
+                        <a onClick={this.stop_terminal}>Stop Terminal</a> |
                     </div>
                 </div>
                 <div className="blank">

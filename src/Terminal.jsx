@@ -1,4 +1,4 @@
-import './Terminal.css'
+import './app.css'
 import axios from "axios";
 import React, {Component} from 'react'
 import {XmlEntities} from 'html-entities';
@@ -12,17 +12,28 @@ class Terminal extends Component {
         this.id = props.id;
         this.entities = new XmlEntities();
         this.ansi_converter = new AnsiUp();
+        this.socket = props.socket;
         this.state = {
-            "socket": props.socket,
             "terminal_content": "",
             "active": false
         };
-        this.state.socket.emit('join_terminal', this.id);
+        this.socket.emit('join_terminal', this.id);
+    }
+
+    update_active_state(){
+        axios.get('/runner/' + this.id + '/active')
+            .then(active => {
+                this.setState({
+                    ...this.state,
+                    "active": active.data
+                });
+        });
     }
 
     componentDidMount() {
-        this.state.socket.on('new_output', (output) => {
-            console.log(output);
+        this.update_active_state()
+
+        this.socket.on('new_output', (output) => {
             let output_html = this.ansi_converter.ansi_to_html(output);
             let decoded_html_output = this.entities.decode(output_html);
             this.setState({
@@ -31,16 +42,7 @@ class Terminal extends Component {
             });
         });
 
-        axios.get('/runner/' + this.id + '/active')
-            .then(active => {
-                this.setState({
-                    ...this.state,
-                    "active": active.data
-                });
-
-            })
-
-        this.state.socket.on('terminal_history', (output) => {
+        this.socket.on('terminal_history', (output) => {
             let output_html = this.ansi_converter.ansi_to_html(output);
             let decoded_html_output = this.entities.decode(output_html);
             this.setState({
@@ -49,8 +51,7 @@ class Terminal extends Component {
             });
         });
 
-
-        this.state.socket.on('is_active', (active) => {
+        this.socket.on('is_active', (active) => {
             this.setState({
                 ...this.state,
                 "active": active
@@ -59,22 +60,14 @@ class Terminal extends Component {
     }
 
     componentWillUnmount() {
-        this.state.socket.emit('leave_terminal', this.id);
+        this.socket.emit('leave_terminal', this.id);
     }
 
-    clear_terminal() {
-        this.setState({
-            ...this.state,
-            "terminal_content": ""
-        });
-    }
-
-    active_badge() {
+    active_badge = () => {
         if (this.state.active)
             return <div className="active"></div>
-        else
-            return <div className="not_active"></div>
-    }
+        return <div className="not_active"></div>
+    };
 
     render() {
         return (
@@ -83,9 +76,9 @@ class Terminal extends Component {
                         className="terminal_body"
                         dangerouslySetInnerHTML={{__html: this.state.terminal_content}}>
                     </div>
-                    <CommandForm id={this.id} socket={this.state.socket}/>
+                    <CommandForm id={this.id} socket={this.socket}/>
                     <div className="terminal_status_bar">
-                        {this.active_badge.bind(this)()}
+                        {this.active_badge()}
                     </div>
                 </div>
         );

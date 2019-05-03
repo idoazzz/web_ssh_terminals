@@ -24,12 +24,13 @@ class CommandForm extends Component {
 
   send(command){
       this.state.socket.emit('new_input', {"command": command , "terminal_id": this.id});
+      this.state.value = ""
   }
 
   render() {
     return (
       <form className="command_form" onSubmit={this.handleSubmit}>
-          <input className="command_input"
+          <input autoFocus className="command_input"
                  placeholder="$ Insert your command"
                  type="text"
                  value={this.state.value}

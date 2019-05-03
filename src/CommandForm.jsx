@@ -1,5 +1,4 @@
 import React, { Component } from 'react'
-import './Terminal.css'
 
 class CommandForm extends Component {
   constructor(props) {
@@ -30,13 +29,11 @@ class CommandForm extends Component {
   render() {
     return (
       <form className="command_form" onSubmit={this.handleSubmit}>
-        <label>
           <input className="command_input"
                  placeholder="$ Insert your command"
                  type="text"
                  value={this.state.value}
                  onChange={this.handleChange} />
-        </label>
       </form>
     );
   }

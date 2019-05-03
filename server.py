@@ -110,6 +110,7 @@ class RunnerManagerBackgroundTask(RunnersManager):
             terminal_id (str): Socket and runner identifier.
             command (str): Input for the runner.
         """
+        print(self._runners)
         if not self.exists(terminal_id):
             return
 

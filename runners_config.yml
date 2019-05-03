@@ -1,5 +1,4 @@
 runners_limit: 10
-setup_command: /bin/bash
 startup_commands:
   - echo "Welcome!"
   - ls /

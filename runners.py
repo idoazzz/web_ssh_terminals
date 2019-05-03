@@ -6,7 +6,7 @@ from pexpect import spawn, pxssh, EOF
 from pexpect import TIMEOUT as READING_TIMEOUT_EXCEPTION
 
 
-class Runner(object):
+class RemoteRunner(object):
     """Represents a generic runner that holds an interactive process.
 
     Runner is a process that has a job and can be interactive with
@@ -16,17 +16,22 @@ class Runner(object):
     getting input and return output while it's running.
 
     Attributes:
-        sub_process (spawn): Holds the pexpect sub process.
+        sub_process (spawn): Holds the pxssh sub process.
         runner_name (str): Runner name.
         logger (Logger): Runner logger.
     """
     TIMEOUT = 0.001  # Seconds, reading interval.
     CHUNK_SIZE = 4096  # Bytes.
 
-    def __init__(self, runner_name, runner_program, save_output=True):
+    def __init__(self, runner_name, hostname, username,
+                 password, save_output=True):
+
         self.sub_process = None
         self.runner_name = runner_name
-        self.runner_program = runner_program
+
+        self.hostname = hostname
+        self.username = username
+        self.password = password
 
         logging.basicConfig()
         self.logger = getLogger(runner_name)
@@ -36,9 +41,22 @@ class Runner(object):
         self.output = ""
 
     def start(self):
-        """Spawning the runner sub process."""
-        self.logger.debug("Spawning %s...", self.runner_program)
-        self.sub_process = spawn(self.runner_program)
+        """Spawning the remote runner sub process."""
+        self.logger.debug("Spawning remote runner...")
+        try:
+
+            self.sub_process = pxssh.pxssh()
+            self.sub_process.login(self.hostname, self.username, self.password,
+                                   auto_prompt_reset=False)
+
+        except pxssh.ExceptionPxssh as e:
+            self.logger.critical("Failed on login.")
+            self.logger.exception(e)
+
+    def exit(self):
+        """Terminate the runner."""
+        self.logger.debug("Exiting %s runner", self.runner_name)
+        self.sub_process.logout()
 
     def send_input(self, data):
         """Send single command input to the runner.
@@ -82,45 +100,8 @@ class Runner(object):
 
         return result if result is not "" else None
 
-    def exit(self):
-        """Terminate the runner."""
-        self.logger.debug("Exiting %s runner", self.runner_name)
-        self.sub_process.terminate()
-
     def __str__(self):
-        return f"Runner: {self.runner_name} Is Active: {self.active}. Runs " \
-            f"Program: {self.runner_program} "
-
-
-class RemoteRunner(Runner):
-    """Runner that holds a remote runner for interactive use."""
-
-    def __init__(self, runner_name, runner_program, hostname, username,
-                 password):
-
-        super(RemoteRunner, self).__init__(runner_name, runner_program)
-        self.hostname = hostname
-        self.username = username
-        self.password = password
-
-    def start(self):
-        """Spawning the remote runner sub process."""
-        self.logger.debug("Spawning remote runner...")
-        try:
-
-            self.sub_process = pxssh.pxssh()
-            self.sub_process.login(self.hostname, self.username, self.password)
-
-            super(RemoteRunner, self).start()
-
-        except pxssh.ExceptionPxssh as e:
-            self.logger.critical("Failed on login.")
-            self.logger.exception(e)
-
-    def stop(self):
-        """Stopping the running remote runner."""
-        self.sub_process.logout()
-        super(RemoteRunner, self).exit()
+        return f"Runner: {self.runner_name} Is Active: {self.active}."
 
 
 class RunnersManager:
@@ -129,11 +110,10 @@ class RunnersManager:
     def __init__(self):
         self._runners = {}
 
-    def load_runner(self, runner_name, runner_program, hostname=None,
-                    username=None, password=None):
+    def load_runner(self, runner_name, hostname, username, password):
         """Load and start a specific shell runner."""
-        self[runner_name] = RemoteRunner(runner_name, runner_program,
-                                         hostname, username, password)
+        self[runner_name] = RemoteRunner(runner_name, hostname, username,
+                                         password)
 
         return self[runner_name]
 

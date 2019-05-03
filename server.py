@@ -64,8 +64,7 @@ class RunnerManagerBackgroundTask(RunnersManager):
             raise IndexError("Cannot add new runner.")
 
         if not self.exists(terminal_id):
-            self.load_runner(terminal_id, self.config.setup_command,
-                             host, username, password)
+            self.load_runner(terminal_id, host, username, password)
         else:
             self.stop(terminal_id)
 

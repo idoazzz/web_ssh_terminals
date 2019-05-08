@@ -61,7 +61,8 @@ class RunnerManagerBackgroundTask(RunnersManager):
             password (str): Target password.
         """
         if len(self.active_runners) >= self.config.runners_limit:
-            raise IndexError("Cannot add new runner.")
+            socket.emit("error", "Cannot add new runner. Limit has reached.",
+                        room=terminal_id)
 
         if not self.exists(terminal_id):
             self.load_runner(terminal_id, host, username, password)
@@ -109,7 +110,6 @@ class RunnerManagerBackgroundTask(RunnersManager):
             terminal_id (str): Socket and runner identifier.
             command (str): Input for the runner.
         """
-        print(self._runners)
         if not self.exists(terminal_id):
             return
 
@@ -185,7 +185,6 @@ def leave_terminal(terminal_id):
 @socket.on('new_input')
 def handle_message(data):
     """Sending new input to the runner."""
-    print(data)
     runner_manager.send_input(data["terminal_id"], data["command"])
 
 

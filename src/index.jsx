@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import queryString from 'query-string';
 import socketIOClient from 'socket.io-client';
+import Snackbar from '@material-ui/core/Snackbar';
 
 import Terminal from './Terminal.jsx'
 
@@ -13,16 +14,17 @@ const WEBSOCKET_URL = "localhost:8000";
  * Contains terminal component and the control panel.
  */
 class App extends React.Component {
-    constructor(props){
+    constructor(props) {
         /**
          * Parsing the terminal id from the url and open a websocket for the
          * terminal communication.
          */
         super(props);
+        this.socket = socketIOClient(WEBSOCKET_URL)
         let parsed_args = queryString.parse(window.location.search);
         this.state = {
-            socket: socketIOClient(WEBSOCKET_URL),
-            terminal_id: parsed_args.terminal_id
+            terminal_id: parsed_args.terminal_id,
+            error: ""
         };
     }
 
@@ -31,11 +33,11 @@ class App extends React.Component {
          * Starting terminal through the web socket.
          * Starting terminal with start_runner event.
          */
-        this.state.socket.emit('start_runner',
-                                this.state.terminal_id,
-                                "10.0.2.15",
-                                "osboxes",
-                                "osboxes.org");
+        this.socket.emit('start_runner',
+            this.state.terminal_id,
+            "10.0.2.15",
+            "osboxes",
+            "osboxes.org");
     };
 
     stop_terminal = () => {
@@ -43,8 +45,34 @@ class App extends React.Component {
          * Stopping the current terminal through the websocket.
          * Stopping terminal with stop_runner event.
          */
-        this.state.socket.emit('stop_runner', this.state.terminal_id);
+        this.socket.emit('stop_runner', this.state.terminal_id);
     };
+
+
+    open_snackbar = (error_message) => {
+        /**
+         * Handle a new error message with the snackbar.
+         */
+        this.setState({...this.state, error: error_message});
+    };
+
+    close_snackbar = () => {
+        /**
+         * Remove the error from the state.
+         */
+        this.setState({...this.state, error: ""});
+    };
+
+    componentDidMount() {
+        /**
+         * Listen for errors.
+         */
+        this.socket.on('error', (error) => {
+            console.log(error)
+            this.open_snackbar(error);
+        });
+    }
+
 
     render() {
         /**
@@ -54,11 +82,18 @@ class App extends React.Component {
         return (
             <div className="terminal_container">
 
+                <Snackbar
+                    anchorOrigin={{vertical: 'top', horizontal: 'center'}}
+                    open={this.state.error !== ""}
+                    onClick={this.close_snackbar}
+                    message={<span id="message-id">{this.state.error}</span>}
+                />
+
                 <div className="blank"/>
 
                 <Terminal id={this.state.terminal_id}
-                         socket={ this.state.socket }>
-               </Terminal>
+                          socket={this.socket}>
+                </Terminal>
 
                 <div className="control_panel">
                     <div>
@@ -74,4 +109,4 @@ class App extends React.Component {
     }
 }
 
-ReactDOM.render(<App />, document.getElementById('app'));
+ReactDOM.render(<App/>, document.getElementById('app'));

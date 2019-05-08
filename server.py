@@ -185,6 +185,7 @@ def leave_terminal(terminal_id):
 @socket.on('new_input')
 def handle_message(data):
     """Sending new input to the runner."""
+    print(data)
     runner_manager.send_input(data["terminal_id"], data["command"])
 
 

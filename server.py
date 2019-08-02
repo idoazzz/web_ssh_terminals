@@ -63,6 +63,7 @@ class RunnerManagerBackgroundTask(RunnersManager):
         if len(self.active_runners) >= self.config.runners_limit:
             socket.emit("error", "Cannot add new runner. Limit has reached.",
                         room=terminal_id)
+            return
 
         if not self.exists(terminal_id):
             self.load_runner(terminal_id, host, username, password)

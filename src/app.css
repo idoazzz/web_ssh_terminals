@@ -1,4 +1,4 @@
-.terminal_body {
+.session_body {
     padding: 10px;
     overflow: scroll;
     overflow-x: hidden;
@@ -29,7 +29,7 @@
     font: 0.8em 'Andale Mono', Consolas, 'Courier New';
 }
 
-.terminal {
+.session {
     flex: 10;
     height: 100%;
     display: flex;
@@ -42,13 +42,13 @@
     background-color: whitesmoke;
 }
 
-.terminal_container {
+.session_container {
     display: flex;
     justify-content: center;
     height: 100%;
 }
 
-.terminal_status_bar {
+.session_status_bar {
     display: flex;
     height: 5px;
     flex-direction: column;

@@ -1,4 +1,4 @@
-runners_limit: 1
+sessions_limit: 1
 startup_commands:
   - echo "Welcome!"
   - ls /

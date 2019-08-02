@@ -10,42 +10,42 @@ import Terminal from './Terminal.jsx'
 const WEBSOCKET_URL = "localhost:8000";
 
 /**
- * Main terminal app page.
- * Contains terminal component and the control panel.
+ * Main session app page.
+ * Contains session component and the control panel.
  */
 class App extends React.Component {
     constructor(props) {
         /**
-         * Parsing the terminal id from the url and open a websocket for the
-         * terminal communication.
+         * Parsing the session id from the url and open a websocket for the
+         * session communication.
          */
         super(props);
         this.socket = socketIOClient(WEBSOCKET_URL)
         let parsed_args = queryString.parse(window.location.search);
         this.state = {
-            terminal_id: parsed_args.terminal_id,
+            session_id: parsed_args.session_id,
             error: ""
         };
     }
 
-    start_terminal = () => {
+    start_session = () => {
         /**
-         * Starting terminal through the web socket.
-         * Starting terminal with start_runner event.
+         * Starting session through the web socket.
+         * Starting session with start_session event.
          */
-        this.socket.emit('start_runner',
-            this.state.terminal_id,
+        this.socket.emit('start_session',
+            this.state.session_id,
             "10.0.2.15",
             "osboxes",
             "osboxes.org");
     };
 
-    stop_terminal = () => {
+    stop_session = () => {
         /**
-         * Stopping the current terminal through the websocket.
-         * Stopping terminal with stop_runner event.
+         * Stopping the current session through the websocket.
+         * Stopping session with stop_session event.
          */
-        this.socket.emit('stop_runner', this.state.terminal_id);
+        this.socket.emit('stop_session', this.state.session_id);
     };
 
 
@@ -77,10 +77,10 @@ class App extends React.Component {
     render() {
         /**
          * Rendering the main app components.
-         * Main components: Control panel and the terminal.
+         * Main components: Control panel and the session.
          */
         return (
-            <div className="terminal_container">
+            <div className="session_container">
 
                 <Snackbar
                     anchorOrigin={{vertical: 'top', horizontal: 'center'}}
@@ -91,14 +91,14 @@ class App extends React.Component {
 
                 <div className="blank"/>
 
-                <Terminal id={this.state.terminal_id}
+                <Terminal id={this.state.session_id}
                           socket={this.socket}>
                 </Terminal>
 
                 <div className="control_panel">
                     <div>
-                        <a onClick={this.start_terminal}>Start Terminal</a> |
-                        <a onClick={this.stop_terminal}>Stop Terminal</a> |
+                        <a onClick={this.start_session}>Start Terminal</a> |
+                        <a onClick={this.stop_session}>Stop Terminal</a> |
                     </div>
                 </div>
 

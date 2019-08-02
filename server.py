@@ -5,7 +5,7 @@ from attrdict import AttrDict
 from flask import Flask, jsonify, render_template, request, session
 from flask_socketio import SocketIO, join_room, leave_room
 
-from runners import RunnersManager
+from sessions_manager import SessionsManager
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -16,20 +16,20 @@ socket = SocketIO(app,
                   engineio_logger=True,
                   async_mode="eventlet")
 
-RUNNERS_CONFIG = "runners_config.yml"
+SESSIONS_CONFIG = "sessions_config.yml"
 
 
-class RunnerManagerBackgroundTask(RunnersManager):
-    """Manage runner runner input and output.
+class SessionManagerBackgroundTask(SessionsManager):
+    """Manage session session input and output.
 
-    Managing the client runner session with the server means that this class
-    initiate a thread that listening for new output in the runner.
+    Managing the client session session with the server means that this class
+    initiate a thread that listening for new output in the session.
     If we found new output, we emitting this output to the client through
-    websocket. If the client want to send something to the runner, it's
+    websocket. If the client want to send something to the session, it's
     passes here also.
 
     Attributes:
-        runners_listeners (dict): Contains threads that listening for new
+        sessions_listeners (dict): Contains threads that listening for new
         output.
     """
     FILTER_RULES = {
@@ -39,105 +39,105 @@ class RunnerManagerBackgroundTask(RunnersManager):
     }
 
     def __init__(self):
-        super(RunnerManagerBackgroundTask, self).__init__()
-        self.runners_listeners = {}
+        super(SessionManagerBackgroundTask, self).__init__()
+        self.sessions_listeners = {}
 
-        with open(RUNNERS_CONFIG) as runners_config:
-            config = runners_config.read()
+        with open(SESSIONS_CONFIG) as sessions_config:
+            config = sessions_config.read()
             self.config = AttrDict(yaml.load(config))
 
     @property
-    def active_runners(self):
-        """Return the active runners."""
-        return self._runners
+    def active_sessions(self):
+        """Return the active sessions."""
+        return self._sessions
 
-    def restart(self, terminal_id, host, username, password):
-        """Restart the runner and the listening thread.
+    def restart(self, session_id, host, username, password):
+        """Restart the session and the listening thread.
 
         Args:
-            terminal_id (str): Socket and runner identifier.
+            session_id (str): Socket and session identifier.
             host (str): Remote host.
             username (str): Target username.
             password (str): Target password.
         """
-        if len(self.active_runners) >= self.config.runners_limit:
-            socket.emit("error", "Cannot add new runner. Limit has reached.",
-                        room=terminal_id)
+        if len(self.active_sessions) >= self.config.sessions_limit:
+            socket.emit("error", "Cannot add new session. Limit has reached.",
+                        room=session_id)
             return
 
-        if not self.exists(terminal_id):
-            self.load_runner(terminal_id, host, username, password)
+        if not self.exists(session_id):
+            self.load_session(session_id, host, username, password)
         else:
-            self.stop(terminal_id)
+            self.stop(session_id)
 
-        self.start(terminal_id)
-        self.runners_listeners[terminal_id] = socket. \
-            start_background_task(self.listen_for_output, terminal_id)
+        self.start(session_id)
+        self.sessions_listeners[session_id] = socket. \
+            start_background_task(self.listen_for_output, session_id)
 
         for command in self.config.startup_commands:
-            self.send_input(terminal_id, command)
+            self.send_input(session_id, command)
 
-        socket.emit("is_active", True, room=terminal_id)
+        socket.emit("is_active", True, room=session_id)
 
-    def stop(self, terminal_id):
-        """Stopping the listening thread and the runner.
+    def stop(self, session_id):
+        """Stopping the listening thread and the session.
 
         Args:
-            terminal_id (str): Socket and runner identifier.
+            session_id (str): Socket and session identifier.
         """
-        if self.exists(terminal_id):
-            socket.emit("is_active", False, room=terminal_id)
-            self.terminate_runner(terminal_id)  # Will end the thread
-            self.runners_listeners[terminal_id] = None
+        if self.exists(session_id):
+            socket.emit("is_active", False, room=session_id)
+            self.terminate_session(session_id)  # Will end the thread
+            self.sessions_listeners[session_id] = None
 
-    def listen_for_output(self, terminal_id):
+    def listen_for_output(self, session_id):
         """Listen for new output and emitting to the client.
 
         Args:
-            terminal_id (str): Socket and runner identifier.
+            session_id (str): Socket and session identifier.
         """
-        while self.exists(terminal_id):
-            output = self[terminal_id].read_output()
+        while self.exists(session_id):
+            output = self[session_id].read_output()
             if output is not None:
                 output = self.filter_output(output)
-                socket.emit('new_output', output, room=terminal_id)
+                socket.emit('new_output', output, room=session_id)
             else:
                 socket.sleep(0)
 
-    def send_input(self, terminal_id, command):
-        """Sending input to the runner.
+    def send_input(self, session_id, command):
+        """Sending input to the session.
 
         Args:
-            terminal_id (str): Socket and runner identifier.
-            command (str): Input for the runner.
+            session_id (str): Socket and session identifier.
+            command (str): Input for the session.
         """
-        if not self.exists(terminal_id):
+        if not self.exists(session_id):
             return
 
-        self[terminal_id].send_inputs(command)
+        self[session_id].send_inputs(command)
 
-    def send_runner_history(self, terminal_id):
-        """Send the history of the runner to a specific room."""
+    def send_session_history(self, session_id):
+        """Send the history of the session to a specific room."""
 
-        if not self.exists(terminal_id):
+        if not self.exists(session_id):
             return
 
-        terminal_content = self[terminal_id].output
-        socket.emit('terminal_history', self.filter_output(terminal_content),
-                    room=terminal_id)
+        session_content = self[session_id].output
+        socket.emit('session_history', self.filter_output(session_content),
+                    room=session_id)
 
     def filter_output(self, output):
-        """Filtering the runner output and adjust the output to the client.
+        """Filtering the session output and adjust the output to the client.
 
         Args:
-            output (str): Runner output that need to be filtered.
+            output (str): Session output that need to be filtered.
         """
         for key, value in self.FILTER_RULES.items():
             output = output.replace(key, value)
         return output
 
 
-runner_manager = RunnerManagerBackgroundTask()
+session_manager = SessionManagerBackgroundTask()
 
 
 @app.route("/")
@@ -146,47 +146,47 @@ def index():
     return render_template('index.html')
 
 
-@app.route("/runner/<runner_id>/active")
-def is_active(runner_id):
+@app.route("/session/<session_id>/active")
+def is_active(session_id):
     """Serving the index page."""
-    return jsonify(runner_manager.exists(runner_id))
+    return jsonify(session_manager.exists(session_id))
 
 
-@app.route("/runners")
-def get_runners():
+@app.route("/sessions")
+def get_sessions():
     """Serving the index page."""
-    return runner_manager.runners
+    return session_manager.sessions
 
 
-@socket.on("start_runner")
-def start_runner(terminal_id, host, username, password):
-    """Starting/Restarting the runner."""
-    runner_manager.restart(terminal_id, host, username, password)
+@socket.on("start_session")
+def start_session(session_id, host, username, password):
+    """Starting/Restarting the session."""
+    session_manager.restart(session_id, host, username, password)
 
 
-@socket.on("stop_runner")
-def stop_runner(terminal_id):
-    """Stopping the runner."""
-    runner_manager.stop(terminal_id)
+@socket.on("stop_session")
+def stop_session(session_id):
+    """Stopping the session."""
+    session_manager.stop(session_id)
 
 
-@socket.on("join_terminal")
-def join_terminal(terminal_id):
-    """Joining the terminal room."""
-    join_room(terminal_id)
-    runner_manager.send_runner_history(terminal_id)
+@socket.on("join_session")
+def join_session(session_id):
+    """Joining the session room."""
+    join_room(session_id)
+    session_manager.send_session_history(session_id)
 
 
-@socket.on("leave_terminal")
-def leave_terminal(terminal_id):
-    """Leaving the terminal room."""
-    leave_room(terminal_id)
+@socket.on("leave_session")
+def leave_session(session_id):
+    """Leaving the session room."""
+    leave_room(session_id)
 
 
 @socket.on('new_input')
 def handle_message(data):
-    """Sending new input to the runner."""
-    runner_manager.send_input(data["terminal_id"], data["command"])
+    """Sending new input to the session."""
+    session_manager.send_input(data["session_id"], data["command"])
 
 
 @socket.on('disconnect')

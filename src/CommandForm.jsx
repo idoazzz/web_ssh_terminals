@@ -3,12 +3,12 @@ import React, {Component} from 'react'
 /**
  * Command form is an input the handles the user shell commands.
  * Each command that the user insert piped into the web socket and to the
- * remote machine through ssh runner.
+ * remote machine through ssh session.
  */
 class CommandForm extends Component {
     constructor(props) {
         /**
-         * Initialize terminal id and the parent component websocket.
+         * Initialize session id and the parent component websocket.
          * Also, the value state represent the user input.
          */
         super(props);
@@ -41,7 +41,7 @@ class CommandForm extends Component {
          */
         this.state.socket.emit('new_input',{
                 "command": command,
-                "terminal_id": this.id
+                "session_id": this.id
         });
         this.setState({...this.state, value: ""});
     };

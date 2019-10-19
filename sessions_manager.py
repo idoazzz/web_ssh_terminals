@@ -14,7 +14,7 @@ class SSHSession(object):
         session_name (str): Session name.
         logger (Logger): Session logger.
     """
-    TIMEOUT = 0.001  # Seconds, reading interval.
+    TIMEOUT = 0  # Make reading non blocking.
     CHUNK_SIZE = 4096  # Bytes.
 
     def __init__(self, session_name, hostname, username,

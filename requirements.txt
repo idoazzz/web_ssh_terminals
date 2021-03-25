@@ -14,6 +14,6 @@ pexpect==4.7.0
 ptyprocess==0.6.0
 python-engineio==3.9.1
 python-socketio==4.3.0
-PyYAML==5.1.2
+PyYAML==5.4
 six==1.12.0
 Werkzeug==0.15.5

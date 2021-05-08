@@ -1,7 +1,7 @@
 attrdict==2.0.1
 Click==7.0
 dnspython==1.16.0
-eventlet==0.25.0
+eventlet==0.31.0
 Flask==1.1.1
 Flask-SocketIO==4.2.0
 gevent==1.4.0
